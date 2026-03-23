@@ -3,9 +3,10 @@ import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 import yt_dlp
 import threading
+from flask import Flask # Render এর জন্য নতুন যুক্ত করা হলো
 
-# আপনার BotFather থেকে পাওয়া টোকেন দিন
-BOT_TOKEN = "8694002020:AAH9Ig480bI8UURWo9kkoVt3R1-rlvdQudM"
+# আপনার BotFather থেকে পাওয়া টোকেন (এখন এটি Render এর Environment Variable থেকে নেবে)
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
 bot = telebot.TeleBot(BOT_TOKEN)
 
 # ইউজারদের লিংক সাময়িকভাবে সেভ রাখার জন্য ডিকশনারি
@@ -199,6 +200,23 @@ def send_file_to_telegram(chat_id, filename, is_audio=False):
         if os.path.exists(filename): os.remove(filename)
         return False
 
-# বট চালু হওয়ার কনসোল মেসেজ
-print("🤖 Ultimate Downloader Bot is running...")
-bot.infinity_polling()
+# ==============================
+# Render Dummy Web Server & App Start
+# ==============================
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Ultimate Downloader Bot is running perfectly on Render!"
+
+def run_web():
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
+
+if __name__ == "__main__":
+    # ওয়েব সার্ভার ব্যাকগ্রাউন্ডে রান করা (Render কে খুশি রাখতে)
+    threading.Thread(target=run_web).start()
+    
+    # আপনার টেলিগ্রাম বট রান করা
+    print("🤖 Ultimate Downloader Bot is running...")
+    bot.infinity_polling()
